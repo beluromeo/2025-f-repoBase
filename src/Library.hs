@@ -79,13 +79,15 @@ empiezaIgual :: FormaPlagio
 empiezaIgual = primerosCaracteres 3 && longitudMenor
 
 primerosCaracteresIguales :: Number -> Obra -> Obra -> Bool
-primerosCaracteres n original plagio = primerosCaracteres n . texto original == primerosCaracteres n . texto plagio
+primerosCaracteres n original plagio = primerosCaracteres n original == primerosCaracteres n plagio
 
-primerosCaracteres :: Number -> String -> String
-primerosCaracteres n = take n 
+primerosCaracteres :: Number -> Obra -> String
+primerosCaracteres n = take n (texto obra)
 
 longitudMenor :: Obra -> Obra -> Bool
-longitudMenor original plagio = length original < length plagio
+longitudMenor original plagio = length (texto original) < length (texto plagio)
+
+
 
 
 
