@@ -33,8 +33,8 @@ autor1 = UnAutor "belen" [obraA, obraB]
 
 -- 2) ----------------------------------------------------------------------------------------------------------------
 
-versionCruda :: Texto -> Texto 
-versionCruda texto = sinAcentos . soloAlfanumericos
+versionCruda :: Texto -> Texto
+versionCruda  = sinAcentos . soloAlfanumericos
 
 sinAcentos :: Texto -> Texto
 sinAcentos = map sacarAcento
@@ -45,7 +45,13 @@ sacarAcento 'á' = 'a'
 sacarAcento letra = letra
 
 soloAlfanumericos :: String -> String
-soloAlfanumericos = filter elem caracter ['a'..'z'] ['A'..'Z'] [0..9]
+soloAlfanumericos = filter esLetraOnumero
+
+esLetraOnumero ::  Char -> Bool
+esLetraOnumero caracter = caracter `elem` caracteresValidos
+
+caracteresValidos :: [Char]
+caracteresValidos = ['a'..'z'] ++ ['A'..'Z'] ++ ['0'..'9'] ++ " "
 
 -- 3) -----------------------------------------------------------------------------------------------------------------
 
@@ -55,10 +61,10 @@ soloAlfanumericos = filter elem caracter ['a'..'z'] ['A'..'Z'] [0..9]
 -- "la" "ra" 1
 -- "a"  "a" ya esta
 distanciaHamming :: String -> String -> Number
-distanciaHamming [][] 
-distanciaHamming (x:xs) (y:ys) 
-      | x\= y = 1 + distanciaHamming xs ys -- si son distintos la cabeza de la cola entonces +1 y la distancia entre las colas
-      | otherwise = distanciaHamming xs ys  
+distanciaHamming [][] = 0
+distanciaHamming (x:xs) (y:ys)
+      | x \= y = 1 + distanciaHamming xs ys -- si son distintos la cabeza de la cola entonces +1 y la distancia entre las colas
+      | otherwise = distanciaHamming xs ys
 
 --4) -------------------------------------------------------------------------------------------------------------------
 
@@ -66,20 +72,20 @@ formasDeteccionPlagio = [copiaLiteral, emiezaIgual, agregaronIntro, distanciaH]
 
 type FormaPlagio = Obra -> Obra -> Bool
 
-deteccionPlagio :: FormaPlagio -> Bool
-deteccionPlagio unaObra otraObra = any (\p -> unaObra otraObra) formasDeteccionPlagio && anioPosterior
+deteccionPlagio :: Obra -> Obra -> Bool
+deteccionPlagio unaObra otraObra = any (\p -> unaObra otraObra) formasDeteccionPlagio && anioPosterior unaObra otraObra
 
 anioPosterior :: Obra -> Obra -> Bool
 anioPosterior original plagio = anioPublicacion original < anioPublicacion plagio
 
-copiaLiteral :: FormaPlagio
+copiaLiteral ::  FormaPlagio
 copiaLiteral = (==) versionCruda
 
-empiezaIgual :: FormaPlagio 
+empiezaIgual :: FormaPlagio
 empiezaIgual = primerosCaracteres 3 && longitudMenor
 
 primerosCaracteresIguales :: Number -> Obra -> Obra -> Bool
-primerosCaracteres n original plagio = primerosCaracteres n original == primerosCaracteres n plagio
+primerosCaracteresIguales n original plagio = primerosCaracteres n original == primerosCaracteres n plagio
 
 primerosCaracteres :: Number -> Obra -> String
 primerosCaracteres n = take n (texto obra)
