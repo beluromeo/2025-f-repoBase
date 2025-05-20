@@ -1,93 +1,70 @@
 module Library where
 import PdePreludat
-import System.Posix.Internals (fileType)
+import Data.Char (toUpper)
+import Data.Bifoldable (Bifoldable)
+-- import qualified Library as head
 
 doble :: Number -> Number
 doble numero = numero + numero
 
+type Palabra = String
+type Verso = String
+type Estrofa = [Verso]
+type Artista = String -- Solamente interesa el nombre
 
-type Texto = String
+esVocal :: Char -> Bool
+esVocal = flip elem "aeiou"
 
+tieneTilde :: Char -> Bool
+tieneTilde = flip elem "áéíóú"
 
-data Obra = UnaObra {
-    texto :: String,
-    anioPublicacion :: Number
-} deriving (Show, Eq)
+cumplen :: (a -> b) -> (b -> b -> Bool) -> a -> a -> Bool
+cumplen f comp v1 v2 = comp (f v1) (f v2)
 
-data Autor = UnAutor {
-    nombre :: String,
-    obras :: [Obra]
-} deriving (Show, Eq)
+------------------------------------------------------------------
 
-obraA :: Obra
-obraA = UnaObra "Habia una vez" 1997
+type Rima = Palabra -> Palabra -> Bool
 
-obraB :: Obra
-obraB = UnaObra "!habia una vez" 1998
+rima :: Rima
+rima unaRima otraRrima = (rimaAsonante unaRima otraRrima || rimaConsonante unaRima otraRrima) && not (palabrasIguales unaRima  otraRrima)
 
-obraC :: Obra
-obraC = UnaObra "mirtha, susana y moria" 2010
+rimaAsonante :: Rima
+rimaAsonante unaRima otraRima = ultimasLetras 2 (vocales unaRima) == ultimasLetras 2 (vocales otraRima)
 
-autor1 :: Autor
-autor1 = UnAutor "belen" [obraA, obraB]
+vocales :: Palabra -> String
+vocales = filter esVocalOTieneTilde
 
--- 2) ----------------------------------------------------------------------------------------------------------------
+esVocalOTieneTilde :: Char -> Bool
+esVocalOTieneTilde letra = esVocal letra || tieneTilde letra
 
-versionCruda :: Texto -> Texto 
-versionCruda texto = sinAcentos . soloAlfanumericos
+rimaConsonante :: Rima
+rimaConsonante unaRima otraRima = ultimasLetras 3 unaRima == ultimasLetras 3 otraRima 
 
-sinAcentos :: Texto -> Texto
-sinAcentos = map sacarAcento
+ultimasLetras :: Number -> Palabra -> Palabra 
+ultimasLetras l palabra = take l (reverse palabra)
 
-sacarAcento :: Char -> Char
-sacarAcento 'á' = 'a'
---y todo el resto
-sacarAcento letra = letra
+palabrasIguales :: Rima
+palabrasIguales = (==)
 
-soloAlfanumericos :: String -> String
-soloAlfanumericos = filter elem caracter ['a'..'z'] ['A'..'Z'] [0..9]
+--  ----------------------------------------------------------------------
 
--- 3) -----------------------------------------------------------------------------------------------------------------
+conjugaciones :: [Verso -> Verso -> Bool]
+conjugaciones = [porRimas, porAnadiplosis]
 
---tomo la primera letra de cada palabra y dejo el resto y voy repitiendo
--- "hola " "pera " 3
--- "ola"  "era" 2
--- "la" "ra" 1
--- "a"  "a" ya esta
-distanciaHamming :: String -> String -> Number
-distanciaHamming [][] 
-distanciaHamming (x:xs) (y:ys) 
-      | x\= y = 1 + distanciaHamming xs ys -- si son distintos la cabeza de la cola entonces +1 y la distancia entre las colas
-      | otherwise = distanciaHamming xs ys  
+conjugacion :: Verso -> Verso -> Bool
+conjugacion unVerso otroVerso = any (\c -> c unVerso otroVerso) conjugaciones 
 
---4) -------------------------------------------------------------------------------------------------------------------
+-- :t any :: (a->Bool) -> [a] -> Bool
 
-formasDeteccionPlagio = [copiaLiteral, emiezaIgual, agregaronIntro, distanciaH]
+porRimas :: Verso -> Verso -> Bool
+porRimas unVerso otroVerso = rima (ultimaPalabra unVerso) (ultimaPalabra otroVerso)
 
-type FormaPlagio = Obra -> Obra -> Bool
+ultimaPalabra :: String -> String
+ultimaPalabra = last . words 
 
-deteccionPlagio :: FormaPlagio -> Bool
-deteccionPlagio unaObra otraObra = any (\p -> unaObra otraObra) formasDeteccionPlagio && anioPosterior
+primeraPalabra :: String -> String
+primeraPalabra = head . words
 
-anioPosterior :: Obra -> Obra -> Bool
-anioPosterior original plagio = anioPublicacion original < anioPublicacion plagio
-
-copiaLiteral :: FormaPlagio
-copiaLiteral = (==) versionCruda
-
-empiezaIgual :: FormaPlagio 
-empiezaIgual = primerosCaracteres 3 && longitudMenor
-
-primerosCaracteresIguales :: Number -> Obra -> Obra -> Bool
-primerosCaracteres n original plagio = primerosCaracteres n . texto original == primerosCaracteres n . texto plagio
-
-primerosCaracteres :: Number -> String -> String
-primerosCaracteres n = take n 
-
-longitudMenor :: Obra -> Obra -> Bool
-longitudMenor original plagio = length original < length plagio
-
-
-
-
+porAnadiplosis :: Verso -> Verso -> Bool
+porAnadiplosis unVerso otroVerso = rima (primeraPalabra unVerso) (ultimaPalabra otroVerso)
 
