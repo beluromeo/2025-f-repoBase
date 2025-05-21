@@ -1,6 +1,6 @@
 module Library where
 import PdePreludat
-import System.Posix.Internals (fileType)
+
 
 doble :: Number -> Number
 doble numero = numero + numero
@@ -63,38 +63,65 @@ caracteresValidos = ['a'..'z'] ++ ['A'..'Z'] ++ ['0'..'9'] ++ " "
 distanciaHamming :: String -> String -> Number
 distanciaHamming [][] = 0
 distanciaHamming (x:xs) (y:ys)
-      | x \= y = 1 + distanciaHamming xs ys -- si son distintos la cabeza de la cola entonces +1 y la distancia entre las colas
+      | x /= y = 1 + distanciaHamming xs ys -- si son distintos la cabeza de la cola entonces +1 y la distancia entre las colas
       | otherwise = distanciaHamming xs ys
 
 --4) -------------------------------------------------------------------------------------------------------------------
 
-formasDeteccionPlagio = [copiaLiteral, emiezaIgual, agregaronIntro, distanciaH]
-
 type FormaPlagio = Obra -> Obra -> Bool
 
-deteccionPlagio :: Obra -> Obra -> Bool
-deteccionPlagio unaObra otraObra = any (\p -> unaObra otraObra) formasDeteccionPlagio && anioPosterior unaObra otraObra
+formasDeteccionPlagio :: [FormaPlagio]
+formasDeteccionPlagio = [copiaLiteral, empiezaIgual 3 ,  distanciaH 10]-- or
+
+deteccionPlagio :: Obra -> Obra -> FormaPlagio -> Bool
+deteccionPlagio unaObra otraObra = any (formasDeteccionPlagio otraObra unaObra)  && anioPosterior unaObra otraObra
 
 anioPosterior :: Obra -> Obra -> Bool
 anioPosterior original plagio = anioPublicacion original < anioPublicacion plagio
 
-copiaLiteral ::  FormaPlagio
-copiaLiteral = (==) versionCruda
+copiaLiteral :: FormaPlagio
+copiaLiteral original plagio  = versionCruda (texto original) == versionCruda (texto plagio)
 
-empiezaIgual :: FormaPlagio
-empiezaIgual = primerosCaracteres 3 && longitudMenor
+empiezaIgual :: Number -> FormaPlagio
+empiezaIgual n original plagio = primerosCaracteresIguales n original plagio  && longitudMenor original plagio
 
 primerosCaracteresIguales :: Number -> Obra -> Obra -> Bool
 primerosCaracteresIguales n original plagio = primerosCaracteres n original == primerosCaracteres n plagio
 
 primerosCaracteres :: Number -> Obra -> String
-primerosCaracteres n = take n (texto obra)
+primerosCaracteres n obra = take n (texto obra)
 
 longitudMenor :: Obra -> Obra -> Bool
 longitudMenor original plagio = length (texto original) < length (texto plagio)
 
+-- falta agregarIntro
 
+distanciaH :: Number -> FormaPlagio
+distanciaH n unaObra otraObra = distanciaHamming (texto unaObra ) (texto otraObra) <  n
 
+-- si la ultima palabra de un texto original tiene la misma cantidad de caracteres que el tlimo de otra
+nuevaFormaPlagio :: FormaPlagio
+nuevaFormaPlagio = \original plagio -> (cantCaracteresUltimaPlabra . texto)  original == (cantCaracteresUltimaPlabra . texto ) plagio
+
+cantCaracteresUltimaPlabra :: Texto -> Number
+cantCaracteresUltimaPlabra = length . ultimaPalabra
+
+ultimaPalabra :: Texto -> Texto
+ultimaPalabra = last . words
+
+data Bot = UnBot {
+    formas :: [FormaPlagio],
+    fabricante :: String
+} deriving (Show)
+
+bot1 :: Bot
+bot1 = UnBot [copiaLiteral] "fabricanteA"
+
+bot2 :: Bot
+bot2 = UnBot [copiaLiteral, empiezaIgual 3, distanciaH 3] "fabricanteB"
+
+deteccion :: Bot -> Obra -> Obra -> Bool
+deteccion bot unaObra otraObra = any (deteccionPlagio unaObra otraObra) (formas bot)
 
 
 
