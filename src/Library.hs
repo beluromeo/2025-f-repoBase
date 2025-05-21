@@ -68,3 +68,4 @@ primeraPalabra = head . words
 porAnadiplosis :: Verso -> Verso -> Bool
 porAnadiplosis unVerso otroVerso = rima (primeraPalabra unVerso) (ultimaPalabra otroVerso)
 
+type Patrones = Estrofa -> Estrofa
