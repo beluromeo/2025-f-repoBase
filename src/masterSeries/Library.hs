@@ -1,7 +1,7 @@
 module Library where
 import PdePreludat
 import Data.Char (toUpper)
-import Data.Bifoldable (Bifoldable)
+
 -- import qualified Library as head
 
 doble :: Number -> Number
